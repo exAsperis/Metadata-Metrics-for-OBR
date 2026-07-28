@@ -1,88 +1,125 @@
+---
+title: Metadata Metrics
+description: Inspect room metadata usage and locate oversized values.
+author: ex Asperis
+image: https://raw.githubusercontent.com/exAsperis/Metadata-Metrics-for-OBR/main/docs/store-hero.png
+icon: https://exasperis.github.io/Metadata-Metrics-for-OBR/icon.svg
+tags:
+  - other
+manifest: https://exasperis.github.io/Metadata-Metrics-for-OBR/manifest.json
+learn-more: https://github.com/exAsperis/Metadata-Metrics-for-OBR
+---
+
 # Metadata Metrics
 
-Metadata Metrics is an independent, read-only diagnostic extension for
-[Owlbear Rodeo](https://www.owlbear.rodeo/). It shows how much of a room's
-metadata quota is in use and lets the GM inspect nested object and array
-structure to locate oversized values—without revealing the values themselves.
+Metadata Metrics is a read-only diagnostic tool for Owlbear Rodeo game
+masters. It shows how much of the room metadata quota is in use and helps you
+find the namespaces, keys, objects, and arrays consuming the most space.
 
-Top-level metadata keys are rolled up by the namespace before the first `/`.
-For example, all `com.bryan.dungeon-world-creatures/...` keys appear beneath a
-single `com.bryan.dungeon-world-creatures` row showing their combined size.
-The tree starts collapsed and opens only the levels the GM chooses.
+![Metadata Metrics open in an Owlbear Rodeo room](https://raw.githubusercontent.com/exAsperis/Metadata-Metrics-for-OBR/main/docs/store-hero.png)
 
-## Guarantees and privacy
+## Install and enable
 
-- Metadata Metrics calls `OBR.room.getMetadata()` and listens to
-  `OBR.room.onMetadataChange()`.
-- It never calls `OBR.room.setMetadata()` or any other metadata-writing API.
-- Only GMs can use the inspector. Players receive an access-restricted screen.
-- Raw metadata values are never rendered, searched, copied, logged, persisted,
-  or transmitted.
-- The extension includes no telemetry, analytics, or external network calls.
-- Settings and UI state remain local to the popover.
+1. Open **Extensions** from Owlbear Rodeo's Extras menu.
+2. Find **Metadata Metrics** in the extension browser and select **Add**.
+3. Enable Metadata Metrics for the room you want to inspect.
+4. Select its database icon in the extension bar.
 
-## Size calculation
+Metadata Metrics is available to the GM only. Players see an access-restricted
+message and no room metadata is read for them.
 
-The total is the UTF-8 byte length of `JSON.stringify(metadata)`. This extension
-uses a conservative documented room metadata limit of **16 kB = 16,000 bytes**,
-not 16 KiB. The adjustable value lives in
-`src/constants.ts` as `DOCUMENTED_ROOM_METADATA_LIMIT_BYTES`.
+## Use Metadata Metrics
 
-Each top-level attribution is:
+The **Room Metadata** panel shows:
+
+- Current usage against the documented 16 kB room limit
+- Exact UTF-8 byte count and percentage used
+- Normal, caution, warning, or critical quota status
+- Number of top-level metadata keys
+- Time of the latest update
+
+The display updates automatically when room metadata changes. Select
+**Refresh** whenever you want to request a fresh reading manually.
+
+### Find the largest extension namespaces
+
+Top-level keys are grouped by the namespace before the first `/`. For example,
+all `com.example.my-extension/...` keys appear under one
+`com.example.my-extension` row with their combined attributed size.
+
+Namespaces start collapsed and are sorted largest first. Expand a namespace to
+see its metadata keys, then continue through nested objects and arrays. Object
+members are sorted by size; array items remain in their original order and are
+shown 100 at a time.
+
+### Search and copy paths
+
+Search is case-insensitive and checks key names and structural paths only.
+Matching descendants remain visible with their ancestors so you can understand
+where each result belongs.
+
+Use the copy button beside any row to copy only its path, such as:
 
 ```text
-UTF8(JSON.stringify(key)) + 1 colon byte + UTF8(JSON.stringify(value))
+com.example.my-extension/metadata.characters[3].inventory
 ```
 
-The separately displayed root overhead is two brace bytes plus one comma byte
-between each pair. Top-level entries plus root overhead therefore equal the
-exact total.
+Metadata values are never copied or displayed.
 
-Nested values are serialized independently for diagnostic comparison. A
-parent's size includes all of its descendants, so nested rows overlap and must
-not be summed. Escaping and JSON punctuation can also make the apparent size
-different from source data or in-memory size.
+## How sizes are calculated
 
-## Install from GitHub Pages
-
-After GitHub Pages is enabled for the repository's `gh-pages` deployment, add
-this manifest URL in Owlbear Rodeo:
+The total is the UTF-8 byte length of the room metadata's JSON serialization:
 
 ```text
-https://exasperis.github.io/Metadata-Metrics-for-OBR/manifest.json
+UTF8(JSON.stringify(metadata))
 ```
 
-The action opens a compact 440×650 px popover.
+Metadata Metrics treats the documented 16 kB limit conservatively as
+**16,000 bytes**, not 16 KiB.
 
-## Develop
+Each top-level key includes its serialized key, colon, and serialized value.
+Root braces and commas are shown separately, so top-level entries plus root
+overhead equal the exact total.
 
-Requires a current Node.js LTS release.
+Nested rows show the independently serialized size of each value. A parent
+already contains its descendants, so parent and child rows overlap and must not
+be added together.
 
-```bash
-npm install
-npm run dev
-```
+## Privacy and safety
 
-Load `http://localhost:5173/manifest.json` as a development extension. The Vite
-server allows the Owlbear Rodeo origin for iframe development.
+- Metadata Metrics never writes or modifies room metadata.
+- Raw metadata values, including potential array labels, are never displayed.
+- Search examines keys and paths only.
+- No metadata is logged, persisted, transmitted, or sent to telemetry.
+- The extension makes no external runtime requests.
+- Only the GM can access structural diagnostics.
 
-## Validate and build
+## Troubleshooting
 
-```bash
-npm run typecheck
-npm test
-npm run build
-```
+**The extension says GM access is required**
 
-The static output is written to `dist/`.
+Only the room's current GM can inspect room metadata. Confirm that you joined
+the room as the GM, then select **Retry**.
 
-## Limitations
+**Metadata is unavailable**
 
-- The 16,000-byte limit follows Owlbear Rodeo's current documentation and may
-  change upstream.
-- JSON serialization measures transport/storage representation, not JavaScript
-  heap usage.
-- Nested attribution overlaps by design; only the top-level reconciliation is
-  additive.
-- Friendly array labels are intentionally omitted because displaying values
-  would violate the extension's privacy guarantee.
+Confirm that the extension is enabled for the room and that Owlbear Rodeo is
+connected, then select **Retry** or reopen the extension.
+
+**A total looks larger than its visible children**
+
+Serialized JSON includes quotes, escaping, punctuation, and other structural
+bytes. Nested rows also overlap with their parents by design.
+
+**The quota limit changes in Owlbear Rodeo**
+
+Open a support issue so the extension's documented 16,000-byte constant can be
+updated.
+
+## Support
+
+Report bugs or request improvements through
+[GitHub Issues](https://github.com/exAsperis/Metadata-Metrics-for-OBR/issues).
+
+Metadata Metrics is independent software and is not affiliated with or
+endorsed by Owlbear Rodeo.
