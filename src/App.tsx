@@ -3,12 +3,12 @@ import { MetadataTree } from "./components/MetadataTree";
 import { StatusPanel } from "./components/StatusPanel";
 import { UsagePanel } from "./components/UsagePanel";
 import { useOwlbearMetadata } from "./hooks/useOwlbearMetadata";
-import type { MetadataEntry } from "./metadata/analyzeMetadata";
+import type { MetadataNode } from "./metadata/analyzeMetadata";
 import { filterTree } from "./metadata/search";
 
 type Sort = "largest" | "smallest" | "az" | "za";
 
-function sortEntries(entries: MetadataEntry[], sort: Sort) {
+function sortEntries(entries: MetadataNode[], sort: Sort) {
   return [...entries].sort((a, b) => {
     if (sort === "largest") return b.size - a.size;
     if (sort === "smallest") return a.size - b.size;
@@ -34,7 +34,7 @@ export default function App() {
 
   const visibleNodes = useMemo(() => {
     if (!analysis) return [];
-    return filterTree(sortEntries(analysis.entries, sort), query);
+    return filterTree(sortEntries(analysis.namespaces, sort), query);
   }, [analysis, query, sort]);
 
   if (status === "connecting") {
@@ -103,7 +103,7 @@ export default function App() {
             />
           </label>
           <label>
-            <span className="sr-only">Sort top-level keys</span>
+            <span className="sr-only">Sort namespaces</span>
             <select
               value={sort}
               onChange={(event) => setSort(event.target.value as Sort)}

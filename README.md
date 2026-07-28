@@ -5,6 +5,11 @@ Metadata Metrics is an independent, read-only diagnostic extension for
 metadata quota is in use and lets the GM inspect nested object and array
 structure to locate oversized values—without revealing the values themselves.
 
+Top-level metadata keys are rolled up by the namespace before the first `/`.
+For example, all `com.bryan.dungeon-world-creatures/...` keys appear beneath a
+single `com.bryan.dungeon-world-creatures` row showing their combined size.
+The tree starts collapsed and opens only the levels the GM chooses.
+
 ## Guarantees and privacy
 
 - Metadata Metrics calls `OBR.room.getMetadata()` and listens to

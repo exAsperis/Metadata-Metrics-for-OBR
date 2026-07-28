@@ -16,6 +16,7 @@ describe("analyzeMetadata", () => {
       rootOverhead: 2,
       keyCount: 0,
       entries: [],
+      namespaces: [],
     });
   });
 
@@ -43,6 +44,34 @@ describe("analyzeMetadata", () => {
     expect(entry.children[0].children[1].path).toBe(
       "com.test/metadata.list[1]",
     );
+  });
+
+  it("rolls top-level keys up by namespace", () => {
+    const result = analyzeMetadata({
+      "com.bryan.dungeon-world-creatures/characters": { count: 2 },
+      "com.bryan.dungeon-world-creatures/settings": { enabled: true },
+      "com.example.other/metadata": "small",
+    });
+    const creatures = result.namespaces.find(
+      ({ name }) => name === "com.bryan.dungeon-world-creatures",
+    );
+
+    expect(creatures).toMatchObject({
+      type: "namespace",
+      count: 2,
+      path: "com.bryan.dungeon-world-creatures",
+    });
+    expect(creatures?.children.map(({ name }) => name)).toEqual([
+      "com.bryan.dungeon-world-creatures/characters",
+      "com.bryan.dungeon-world-creatures/settings",
+    ]);
+    expect(creatures?.size).toBe(
+      creatures?.children.reduce((sum, entry) => sum + entry.size, 0),
+    );
+    expect(
+      result.namespaces.reduce((sum, namespace) => sum + namespace.size, 0) +
+        result.rootOverhead,
+    ).toBe(result.totalBytes);
   });
 
   it("counts UTF-8 bytes correctly", () => {

@@ -40,7 +40,7 @@ function TreeNode({
   copied: string;
   setCopied: (path: string) => void;
 }) {
-  const [open, setOpen] = useState(depth === 0);
+  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const expandable = node.children.length > 0;
   const isOpen = expandable && (open || forceOpen);

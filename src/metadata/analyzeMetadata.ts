@@ -6,11 +6,13 @@ export type MetadataType =
   | "boolean"
   | "null";
 
+export type MetadataNodeType = MetadataType | "namespace";
+
 export interface MetadataNode {
   id: string;
   name: string;
   path: string;
-  type: MetadataType;
+  type: MetadataNodeType;
   size: number;
   count?: number;
   children: MetadataNode[];
@@ -21,11 +23,17 @@ export interface MetadataEntry extends MetadataNode {
   valueBytes: number;
 }
 
+export interface MetadataNamespace extends MetadataNode {
+  type: "namespace";
+  children: MetadataEntry[];
+}
+
 export interface MetadataAnalysis {
   totalBytes: number;
   rootOverhead: number;
   keyCount: number;
   entries: MetadataEntry[];
+  namespaces: MetadataNamespace[];
 }
 
 export class MetadataAnalysisError extends Error {
@@ -143,12 +151,34 @@ export function analyzeMetadata(value: unknown): MetadataAnalysis {
       valueBytes,
     };
   });
+  const namespaceMap = new Map<string, MetadataEntry[]>();
+  entries.forEach((entry) => {
+    const separatorIndex = entry.name.indexOf("/");
+    const namespace =
+      separatorIndex === -1 ? entry.name : entry.name.slice(0, separatorIndex);
+    const existing = namespaceMap.get(namespace);
+    if (existing) existing.push(entry);
+    else namespaceMap.set(namespace, [entry]);
+  });
+  const namespaces = Array.from(
+    namespaceMap,
+    ([namespace, namespaceEntries]): MetadataNamespace => ({
+      id: `namespace:${namespace}`,
+      name: namespace,
+      path: namespace,
+      type: "namespace",
+      size: namespaceEntries.reduce((sum, entry) => sum + entry.size, 0),
+      count: namespaceEntries.length,
+      children: namespaceEntries,
+    }),
+  );
 
   return {
     totalBytes,
     rootOverhead,
     keyCount: pairs.length,
     entries,
+    namespaces,
   };
 }
 
