@@ -1,0 +1,22 @@
+{
+  "name": "Metadata Metrics",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "description": "Inspect room metadata usage and locate oversized values.",
+  "author": "ex Asperis",
+  "homepage_url": "https://github.com/exAsperis/Metadata-Metrics-for-OBR",
+  "icon": "/Metadata-Metrics-for-OBR/icon.svg",
+  "action": {
+    "title": "Metadata Metrics",
+    "icon": "/Metadata-Metrics-for-OBR/icon.svg",
+    "popover": "/Metadata-Metrics-for-OBR/",
+    "width": 440,
+    "height": 650
+  },
+  "permissions": [
+    {
+      "name": "clipboard-write",
+      "reason": "Copy metadata paths without copying values."
+    }
+  ]
+}

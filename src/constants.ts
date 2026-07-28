@@ -1,0 +1,2 @@
+export const DOCUMENTED_ROOM_METADATA_LIMIT_BYTES = 16_000;
+export const ARRAY_PAGE_SIZE = 100;
